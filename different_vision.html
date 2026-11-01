@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Different Vision — Посмотри на мир другими глазами</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+    /* Нейтрально-серая среда: так работают с цветом, чтобы интерфейс не искажал восприятие */
+    :root[data-theme="dark"] {
+        --bg: #2a2a2a;
+        --stage: #1f1f1f;
+        --fg: #e8e8e8;
+        --muted: #9b9b9b;
+        --line: #444;
+        --btn-fg: #2a2a2a;
+    }
+    :root[data-theme="light"] {
+        --bg: #dcdcdc;
+        --stage: #cdcdcd;
+        --fg: #1e1e1e;
+        --muted: #5e5e5e;
+        --line: #b4b4b4;
+        --btn-fg: #dcdcdc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.5;
+        min-height: 100vh;
+    }
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        padding: 1.5rem 2rem 1.25rem;
+    }
+    h1 { font-size: 1.75rem; font-weight: 300; letter-spacing: -0.02em; }
+    .tagline { color: var(--muted); font-size: 0.95rem; margin-left: 1rem; font-weight: 300; }
+    .title-wrap { display: flex; align-items: baseline; flex-wrap: wrap; }
+
+    button {
+        font: inherit;
+        cursor: pointer;
+        border: 1px solid var(--fg);
+        background: transparent;
+        color: var(--fg);
+        padding: 0.6rem 1.1rem;
+        border-radius: 2px;
+    }
+    button:hover:not(:disabled) { background: var(--fg); color: var(--btn-fg); }
+    button:disabled { opacity: 0.35; cursor: not-allowed; }
+    button.solid { background: var(--fg); color: var(--btn-fg); }
+    button.solid:hover:not(:disabled) { opacity: 0.85; }
+    button.text { border: none; padding: 0.25rem 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+    button.text:hover:not(:disabled) { background: none; color: var(--fg); }
+    :focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+    main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 2.5rem;
+        padding: 0 2rem 2rem;
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    /* Сцена: само изображение — главное на странице */
+    .stage {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+        background: var(--stage);
+        cursor: pointer;
+    }
+    .stage:focus-within { outline: 2px solid var(--fg); outline-offset: 3px; }
+    .stage.drag { outline: 2px dashed var(--fg); outline-offset: -12px; }
+    .stage input {
+        position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;
+    }
+    #placeholder-text { text-align: left; max-width: 18rem; padding: 1rem; }
+    #placeholder-text strong { display: block; font-weight: 400; font-size: 1.25rem; margin-bottom: 0.25rem; }
+    #placeholder-text span { color: var(--muted); font-size: 0.9rem; }
+    canvas { display: none; max-width: 100%; max-height: 80vh; }
+
+    /* Панель */
+    aside section { padding: 1.25rem 0; border-top: 1px solid var(--line); }
+    aside section:first-child { border-top: none; padding-top: 0; }
+    h2 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.9rem; }
+    h2 small { font-weight: 300; color: var(--muted); font-size: 0.85rem; margin-left: 0.4rem; }
+
+    .spectrum canvas { display: block; width: 100%; height: 16px; max-width: none; max-height: none; }
+    .spectrum canvas + canvas { margin-top: 3px; }
+
+    .control { margin-bottom: 0.9rem; }
+    .row { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.92rem; }
+    .row label small { color: var(--muted); font-weight: 300; margin-left: 0.3rem; }
+    .row output { font-variant-numeric: tabular-nums; color: var(--muted); }
+
+    input[type="range"] {
+        -webkit-appearance: none; appearance: none;
+        width: 100%; height: 22px; background: transparent; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--muted); }
+    input[type="range"]::-moz-range-track { height: 2px; background: var(--muted); }
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none; width: 14px; height: 14px; margin-top: -6px;
+        border-radius: 50%; background: var(--fg); border: none;
+    }
+    input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--fg); border: none; }
+    input[type="range"]:focus-visible { outline: none; }
+    input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--fg); outline-offset: 3px; }
+    input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+    .actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+
+    @media (max-width: 800px) {
+        main { grid-template-columns: 1fr; gap: 1.5rem; padding: 0 1rem 1.5rem; }
+        header { padding: 1rem; }
+        .stage { min-height: 45vh; }
+        .tagline { margin-left: 0; width: 100%; }
+    }
+</style>
+</head>
+<body>
+<header>
+    <div class="title-wrap">
+        <h1>Different Vision</h1>
+        <span class="tagline">Посмотри на мир другими глазами</span>
+    </div>
+    <button id="theme-toggle" class="text">Светлая тема</button>
+</header>
+
+<main>
+    <label class="stage" id="stage">
+        <div id="placeholder-text">
+            <strong>Выберите или перетащите фото</strong>
+            <span>PNG, JPG</span>
+        </div>
+        <canvas id="canvas-view"></canvas>
+        <input type="file" id="image-loader" accept="image/*">
+    </label>
+
+    <aside>
+        <section class="spectrum">
+            <h2>Спектр<small>исходный и с эффектами</small></h2>
+            <canvas id="spec-in" width="300" height="1"></canvas>
+            <canvas id="spec-out" width="300" height="1"></canvas>
+        </section>
+
+        <section>
+            <h2>Цветовое зрение</h2>
+            <div class="control">
+                <div class="row"><label for="range-protan">Протанопия<small>красный</small></label><output><span id="val-protan">0</span>%</output></div>
+                <input type="range" id="range-protan" min="0" max="100" value="0">
+            </div>
+            <div class="control">
+                <div class="row"><label for="range-deutan">Дейтеранопия<small>зелёный</small></label><output><span id="val-deutan">0</span>%</output></div>
+                <input type="range" id="range-deutan" min="0" max="100" value="0">
+            </div>
+            <div class="control">
+                <div class="row"><label for="range-tritan">Тританопия<small>синий</small></label><output><span id="val-tritan">0</span>%</output></div>
+                <input type="range" id="range-tritan" min="0" max="100" value="0">
+            </div>
+            <div class="control">
+                <div class="row"><label for="range-gray">Оттенки серого</label><output><span id="val-gray">0</span>%</output></div>
+                <input type="range" id="range-gray" min="0" max="100" value="0">
+            </div>
+        </section>
+
+        <section>
+            <h2>Изображение</h2>
+            <div class="control">
+                <div class="row"><label for="range-blur">Размытие</label><output><span id="val-blur">0</span>px</output></div>
+                <input type="range" id="range-blur" min="0" max="20" value="0">
+            </div>
+            <div class="control">
+                <div class="row"><label for="range-contrast">Контрастность</label><output><span id="val-contrast">100</span>%</output></div>
+                <input type="range" id="range-contrast" min="50" max="150" value="100">
+            </div>
+        </section>
+
+        <section class="actions">
+            <button id="btn-reset" class="text">Сбросить</button>
+            <button id="btn-download" class="solid" disabled>Скачать PNG</button>
+        </section>
+    </aside>
+</main>
+
+<script>
+    const imageLoader = document.getElementById('image-loader');
+    const stage = document.getElementById('stage');
+    const canvas = document.getElementById('canvas-view');
+    const ctx = canvas.getContext('2d');
+    const placeholderText = document.getElementById('placeholder-text');
+    const themeToggle = document.getElementById('theme-toggle');
+    const btnReset = document.getElementById('btn-reset');
+    const btnDownload = document.getElementById('btn-download');
+
+    const sliders = {
+        protan: document.getElementById('range-protan'),
+        deutan: document.getElementById('range-deutan'),
+        tritan: document.getElementById('range-tritan'),
+        gray: document.getElementById('range-gray'),
+        blur: document.getElementById('range-blur'),
+        contrast: document.getElementById('range-contrast')
+    };
+
+    let originalImage = null;
+
+    themeToggle.addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        themeToggle.textContent = next === 'dark' ? 'Светлая тема' : 'Тёмная тема';
+    });
+
+    function loadFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            originalImage = new Image();
+            originalImage.onload = function() {
+                canvas.width = originalImage.width;
+                canvas.height = originalImage.height;
+                placeholderText.style.display = 'none';
+                canvas.style.display = 'block';
+                btnDownload.disabled = false;
+                applyFilters();
+            };
+            originalImage.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    imageLoader.addEventListener('change', (e) => loadFile(e.target.files[0]));
+
+    stage.addEventListener('dragover', (e) => { e.preventDefault(); stage.classList.add('drag'); });
+    stage.addEventListener('dragleave', () => stage.classList.remove('drag'));
+    stage.addEventListener('drop', (e) => {
+        e.preventDefault();
+        stage.classList.remove('drag');
+        loadFile(e.dataTransfer.files[0]);
+    });
+
+    Object.keys(sliders).forEach(key => {
+        sliders[key].addEventListener('input', (e) => {
+            document.getElementById(`val-${key}`).textContent = e.target.value;
+            drawSpectrum();
+            if (originalImage) applyFilters();
+        });
+    });
+
+    btnReset.addEventListener('click', () => {
+        sliders.protan.value = 0;
+        sliders.deutan.value = 0;
+        sliders.tritan.value = 0;
+        sliders.gray.value = 0;
+        sliders.blur.value = 0;
+        sliders.contrast.value = 100;
+
+        Object.keys(sliders).forEach(key => {
+            document.getElementById(`val-${key}`).textContent = sliders[key].value;
+        });
+
+        drawSpectrum();
+        if (originalImage) applyFilters();
+    });
+
+    btnDownload.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'different-vision-result.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+
+    // Преобразование одного пикселя (формулы без изменений)
+    function transformPixel(r, g, b, pAmt, dAmt, tAmt, gAmt) {
+        if (pAmt > 0) {
+            let simR = r * 0.567 + g * 0.433;
+            let simG = r * 0.558 + g * 0.442;
+            let simB = g * 0.242 + b * 0.758;
+            r = r + (simR - r) * pAmt;
+            g = g + (simG - g) * pAmt;
+            b = b + (simB - b) * pAmt;
+        }
+        if (dAmt > 0) {
+            let simR = r * 0.625 + g * 0.375;
+            let simG = r * 0.700 + g * 0.300;
+            let simB = g * 0.300 + b * 0.700;
+            r = r + (simR - r) * dAmt;
+            g = g + (simG - g) * dAmt;
+            b = b + (simB - b) * dAmt;
+        }
+        if (tAmt > 0) {
+            let simR = r * 0.950 + g * 0.050;
+            let simG = g * 0.433 + b * 0.567;
+            let simB = g * 0.475 + b * 0.525;
+            r = r + (simR - r) * tAmt;
+            g = g + (simG - g) * tAmt;
+            b = b + (simB - b) * tAmt;
+        }
+        if (gAmt > 0) {
+            let grayTarget = r * 0.299 + g * 0.587 + b * 0.114;
+            r = r + (grayTarget - r) * gAmt;
+            g = g + (grayTarget - g) * gAmt;
+            b = b + (grayTarget - b) * gAmt;
+        }
+        return [
+            Math.min(255, Math.max(0, r)),
+            Math.min(255, Math.max(0, g)),
+            Math.min(255, Math.max(0, b))
+        ];
+    }
+
+    function amounts() {
+        return [
+            sliders.protan.value / 100,
+            sliders.deutan.value / 100,
+            sliders.tritan.value / 100,
+            sliders.gray.value / 100
+        ];
+    }
+
+    function applyFilters() {
+        if (!originalImage) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.filter = `blur(${sliders.blur.value}px) contrast(${sliders.contrast.value}%)`;
+        ctx.drawImage(originalImage, 0, 0);
+        ctx.filter = 'none';
+
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        const [pAmt, dAmt, tAmt, gAmt] = amounts();
+
+        for (let i = 0; i < data.length; i += 4) {
+            const [r, g, b] = transformPixel(data[i], data[i+1], data[i+2], pAmt, dAmt, tAmt, gAmt);
+            data[i] = r;
+            data[i+1] = g;
+            data[i+2] = b;
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+    }
+
+    // Полосы спектра: исходный и после текущих эффектов
+    function hueToRgb(h) {
+        const f = n => {
+            const k = (n + h / 60) % 6;
+            return Math.round(255 * (1 - Math.max(0, Math.min(k, 4 - k, 1))));
+        };
+        return [f(5), f(3), f(1)];
+    }
+
+    function drawSpectrum() {
+        const cIn = document.getElementById('spec-in');
+        const cOut = document.getElementById('spec-out');
+        const cIn2 = cIn.getContext('2d');
+        const cOut2 = cOut.getContext('2d');
+        const [pAmt, dAmt, tAmt, gAmt] = amounts();
+        for (let x = 0; x < cIn.width; x++) {
+            const [r, g, b] = hueToRgb(x / cIn.width * 300);
+            cIn2.fillStyle = `rgb(${r},${g},${b})`;
+            cIn2.fillRect(x, 0, 1, 1);
+            const [sr, sg, sb] = transformPixel(r, g, b, pAmt, dAmt, tAmt, gAmt);
+            cOut2.fillStyle = `rgb(${Math.round(sr)},${Math.round(sg)},${Math.round(sb)})`;
+            cOut2.fillRect(x, 0, 1, 1);
+        }
+    }
+
+    drawSpectrum();
+</script>
+</body>
+</html>
