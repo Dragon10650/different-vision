@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-    /* Нейтрально-серая среда: так работают с цветом, чтобы интерфейс не искажал восприятие */
     :root[data-theme="dark"] {
         --bg: #2a2a2a;
         --stage: #1f1f1f;
@@ -72,8 +71,7 @@
         max-width: 1500px;
         margin: 0 auto;
     }
-
-    /* Сцена: само изображение — главное на странице */
+    
     .stage {
         position: relative;
         display: flex;
@@ -129,6 +127,13 @@
         header { padding: 1rem; }
         .stage { min-height: 45vh; }
         .tagline { margin-left: 0; width: 100%; }
+    }
+
+    footer {
+        max-width: 1500px;
+        padding: 0 2rem 2rem;
+        color: var(--muted);
+        font-size: 12px;
     }
 </style>
 </head>
@@ -196,6 +201,10 @@
         </section>
     </aside>
 </main>
+<footer>
+    Важно: этот инструмент создан для обучения и повышения осведомлённости о доступности. Он не диагностирует нарушения зрения и не заменяет консультацию специалиста. Реальное восприятие у разных людей может отличаться.
+    <button class="text" href="old-design">Старый дизайн</button>
+</footer>
 
 <script>
     const imageLoader = document.getElementById('image-loader');
